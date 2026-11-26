@@ -3,6 +3,7 @@
  * Collega l'Hub al foglio "Registro Definitivo Da Bassment Shaolin".
  *  - doGet senza parametri: la vecchia versione web dell'Hub (Index.html), solo per te.
  *  - doPost: l'API usata dall'app (PWA su GitHub Pages). Risponde in JSON.
+ * Le notifiche stanno in Notify.gs (regole) e Push.gs (firma e invio).
  */
 const SHEET_ID = '1FYRP6PXDlydO_meaNmgrS_LUdlgLBscrrBh4AKcg3m8';
 const RANGES = {
@@ -40,6 +41,11 @@ function doPost(e) {
       case 'checkList': out = JSON.parse(checkList()); break;
       case 'checkSet': checkSet(String(a[0]), JSON.stringify(a[1] || {})); out = 'ok'; break;
       case 'checkDel': checkDel(String(a[0])); out = 'ok'; break;
+      case 'pushKey': out = vapidPublicKey(); break;
+      case 'pushSub': out = pushSub(String(a[0]), a[1], a[2], a[3]); break;
+      case 'pushUnsub': out = pushUnsub(String(a[0])); break;
+      case 'pushInbox': out = pushInbox(a[0]); break;
+      case 'pushTest': out = pushTest(); break;
       default: throw new Error('Funzione non prevista: ' + b.fn);
     }
     out = { ok: true, data: out };

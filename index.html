@@ -658,6 +658,57 @@ header .label { display: none; }
     setTimeout(() => inp.focus(), 50);
   };
   if (!API) document.addEventListener("DOMContentLoaded", () => window.hubSetup());
+
+  /* ---- notifiche ---- */
+  const PUSH_OK = "serviceWorker" in navigator && "PushManager" in window && "Notification" in window;
+  const devId = () => { let id = ""; try { id = localStorage.getItem("hub-dev") || ""; if (!id) { id = "d" + Math.random().toString(36).slice(2, 10) + Date.now().toString(36); localStorage.setItem("hub-dev", id); } } catch (e) {} return id; };
+  const tz = () => { try { return Intl.DateTimeFormat().resolvedOptions().timeZone || ""; } catch (e) { return ""; } };
+  const devLabel = () => (/Android/i.test(navigator.userAgent) ? "Android" : /iPhone|iPad/i.test(navigator.userAgent) ? "iPhone" : /Windows/i.test(navigator.userAgent) ? "Windows" : /Mac/i.test(navigator.userAgent) ? "Mac" : "Altro") + (matchMedia("(display-mode: standalone)").matches ? " · app" : " · browser");
+  function b64ToU8(s) { s = s.replace(/-/g, "+").replace(/_/g, "/"); s += "=".repeat((4 - s.length % 4) % 4); const b = atob(s); return Uint8Array.from(b, c => c.charCodeAt(0)); }
+  async function writeCfg(extra) {
+    if (!("caches" in window) || !API) return;
+    try {
+      const c = await caches.open("hub-config");
+      const old = await c.match("config").then(r => (r ? r.json() : {})).catch(() => ({}));
+      await c.put("config", new Response(JSON.stringify(Object.assign({ since: Date.now() }, old, { api: API }, extra || {})), { headers: { "Content-Type": "application/json" } }));
+    } catch (e) {}
+  }
+  async function currentSub() { if (!PUSH_OK) return null; const reg = await navigator.serviceWorker.ready; return reg.pushManager.getSubscription(); }
+  window.hubPush = {
+    supported: PUSH_OK,
+    async state() { if (!PUSH_OK || !API) return "no"; if (Notification.permission === "denied") return "blocked"; return (await currentSub()) && Notification.permission === "granted" ? "on" : "off"; },
+    async enable() {
+      if (!PUSH_OK) throw new Error("Questo browser non supporta le notifiche. Sul telefono installa l'app dalla schermata Home.");
+      if (!API) throw new Error("Prima collega l'app al foglio.");
+      const perm = await Notification.requestPermission();
+      if (perm !== "granted") throw new Error(perm === "denied" ? "Notifiche bloccate: riattivale dalle impostazioni del sito o dell'app." : "Permesso non concesso.");
+      const reg = await navigator.serviceWorker.ready;
+      const key = await call("pushKey", []);
+      let sub = await reg.pushManager.getSubscription();
+      if (sub) { const cur = sub.options && sub.options.applicationServerKey ? btoa(String.fromCharCode(...new Uint8Array(sub.options.applicationServerKey))).replace(/\+/g, "-").replace(/\//g, "_").replace(/=+$/, "") : key; if (cur !== key) { await sub.unsubscribe(); sub = null; } }
+      if (!sub) sub = await reg.pushManager.subscribe({ userVisibleOnly: true, applicationServerKey: b64ToU8(key) });
+      await writeCfg({ since: Date.now() - 1000 });
+      await call("pushSub", [devId(), sub.toJSON(), tz(), devLabel()]);
+      try { localStorage.setItem("hub-push-sync", String(Date.now())); } catch (e) {}
+      await call("pushTest", []);
+      return "on";
+    },
+    async disable() {
+      const sub = await currentSub(); if (sub) await sub.unsubscribe();
+      try { await call("pushUnsub", [devId()]); } catch (e) {}
+      return "off";
+    }
+  };
+  /* all'apertura: tiene aggiornati indirizzo per il service worker e fuso orario (una volta al giorno) */
+  if (API) addEventListener("load", async () => {
+    await writeCfg();
+    try {
+      if (PUSH_OK && Notification.permission === "granted") {
+        const sub = await currentSub(), last = +(localStorage.getItem("hub-push-sync") || 0);
+        if (sub && Date.now() - last > 864e5) { await call("pushSub", [devId(), sub.toJSON(), tz(), devLabel()]); localStorage.setItem("hub-push-sync", String(Date.now())); }
+      }
+    } catch (e) {}
+  });
 })();
 </script>
 <script>
@@ -1426,9 +1477,22 @@ function drawMenu() {
   const svg = k => `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">${IC[k]}</svg>`;
   $("#side").innerHTML = `<div class="shead"><b>Bassment <span>Hub</span></b><button class="menubtn closebtn" type="button" id="closemenu" aria-label="Chiudi il menu"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M6 6l12 12M18 6 6 18"/></svg></button></div>` +
     MENU.map(([gname, items]) => `<div class="grp">${gname}</div>` + items.map(([k, l]) => { const n = menuCount(k); return `<a href="#${k}" data-v="${k}" ${k === view ? 'aria-current="page"' : ""}>${svg(k)}<span>${l}</span>${n !== "" ? `<span class="n">${n}</span>` : ""}</a>`; }).join("")).join("") +
-    `<div class="grp">Fuori dall'hub</div><a href="${SHEET_URL}" target="_blank" rel="noopener">${svg("foglio")}<span>Il foglio Google</span></a><a href="#" data-setup>${svg("foglio")}<span>Collegamento al foglio</span></a><div class="foot">@andreadeblasiobass</div>`;
+    `<div class="grp">Fuori dall'hub</div><a href="${SHEET_URL}" target="_blank" rel="noopener">${svg("foglio")}<span>Il foglio Google</span></a><a href="#" data-push><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 8a6 6 0 0 1 12 0c0 7 3 9 3 9H3s3-2 3-9"/><path d="M10.3 21a1.94 1.94 0 0 0 3.4 0"/></svg><span>Notifiche</span><span class="n" id="pushst"></span></a><a href="#" data-setup>${svg("foglio")}<span>Collegamento al foglio</span></a><div class="foot">@andreadeblasiobass</div>`;
   $("#closemenu").onclick = closeMenu;
   const su = $("#side [data-setup]"); if (su) su.onclick = e => { e.preventDefault(); closeMenu(); window.hubSetup(); };
+  const pu = $("#side [data-push]"), pst = $("#pushst");
+  const showPush = st => { if (pst) pst.textContent = { on: "attive", off: "spente", blocked: "bloccate", no: "—" }[st] || ""; };
+  if (pu && window.hubPush) {
+    window.hubPush.state().then(showPush).catch(() => {});
+    pu.onclick = async e => {
+      e.preventDefault();
+      const st = await window.hubPush.state().catch(() => "no");
+      try {
+        if (st === "on") { if (!confirm("Spegnere le notifiche su questo dispositivo?")) return; showPush(await window.hubPush.disable()); toast("Notifiche spente su questo dispositivo."); }
+        else { if (pst) pst.textContent = "attivo…"; showPush(await window.hubPush.enable()); toast("Notifiche attive: tra poco ne arriva una di prova."); }
+      } catch (err) { showPush(await window.hubPush.state().catch(() => "no")); toast(String((err && err.message) || err), true); }
+    };
+  }
 }
 function openMenu() { $("#side").classList.add("open"); $("#scrim").classList.add("on"); $("#menubtn").setAttribute("aria-expanded", "true"); const a = $("#side a[aria-current]") || $("#side a"); if (a) setTimeout(() => a.focus(), 50); }
 function closeMenu() { if (!$("#side").classList.contains("open")) return; $("#side").classList.remove("open"); $("#scrim").classList.remove("on"); $("#menubtn").setAttribute("aria-expanded", "false"); }
