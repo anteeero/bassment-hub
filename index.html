@@ -336,6 +336,32 @@ footer.f { color: var(--muted); font-size: 12px; text-align: center; padding-top
 .setupin input { font: 14px var(--f-mono); padding: 10px 12px; border-radius: 8px; border: 1px solid var(--line); background: var(--bg); color: var(--ink); width: 100%; }
 .setupin .setupmsg { color: var(--ink); min-height: 1.4em; }
 .setupbtns { display: flex; gap: 8px; justify-content: flex-end; }
+/* ---------- palette (Impostazioni → Aspetto) ---------- */
+:root[data-hub-palette="vinile"]{--bg:#EDF0EA;--surface:#FBFCF8;--sunk:#E2E8E1;--ink:#13282A;--muted:#55696A;--line:#CFDAD5;--accent:#1E5A5E;--accent-ink:#F4FAF8;--accent-soft:#D3E6E3;--ok:#3F7A3A;--warn:#A0581E;--bad:#B23A2A;--violet:#6B4E8A;--ok-zone:#D7E8CC;--warn-zone:#F3E3B8;--bad-zone:#F2D0C8;color-scheme:light}
+@media (prefers-color-scheme: dark){:root[data-hub-palette="vinile"]:not([data-hub-theme="light"]){--bg:#0E1A1B;--surface:#142426;--sunk:#10201F;--ink:#F1E9D8;--muted:#9FB3AE;--line:#24393A;--accent:#E8B84A;--accent-ink:#14110A;--accent-soft:#33331C;--ok:#7FC7A0;--warn:#E89A6A;--bad:#EF7B6E;--violet:#C6A6E0;--ok-zone:#1E3A2C;--warn-zone:#3E3218;--bad-zone:#45231C;color-scheme:dark}}
+:root[data-hub-palette="vinile"][data-hub-theme="dark"]{--bg:#0E1A1B;--surface:#142426;--sunk:#10201F;--ink:#F1E9D8;--muted:#9FB3AE;--line:#24393A;--accent:#E8B84A;--accent-ink:#14110A;--accent-soft:#33331C;--ok:#7FC7A0;--warn:#E89A6A;--bad:#EF7B6E;--violet:#C6A6E0;--ok-zone:#1E3A2C;--warn-zone:#3E3218;--bad-zone:#45231C;color-scheme:dark}
+:root[data-hub-palette="reel"]{--bg:#F6F0E2;--surface:#FFFBF2;--sunk:#EFE6D3;--ink:#241D12;--muted:#6E624E;--line:#E2D6BE;--accent:#8A6400;--accent-ink:#FFF8E6;--accent-soft:#F6E7B8;--ok:#3F7A3A;--warn:#B4532A;--bad:#B23A2A;--violet:#8A4772;--ok-zone:#D7E8CC;--warn-zone:#F6DCC8;--bad-zone:#F2D0C8;color-scheme:light}
+@media (prefers-color-scheme: dark){:root[data-hub-palette="reel"]:not([data-hub-theme="light"]){--bg:#14110D;--surface:#1F1A14;--sunk:#191510;--ink:#FFF0D6;--muted:#B5A68C;--line:#3A3226;--accent:#FFCB2F;--accent-ink:#1A1404;--accent-soft:#3A3010;--ok:#8FCB7E;--warn:#F29C6B;--bad:#F07A6A;--violet:#D49ABF;--ok-zone:#263A20;--warn-zone:#43291A;--bad-zone:#45231C;color-scheme:dark}}
+:root[data-hub-palette="reel"][data-hub-theme="dark"]{--bg:#14110D;--surface:#1F1A14;--sunk:#191510;--ink:#FFF0D6;--muted:#B5A68C;--line:#3A3226;--accent:#FFCB2F;--accent-ink:#1A1404;--accent-soft:#3A3010;--ok:#8FCB7E;--warn:#F29C6B;--bad:#F07A6A;--violet:#D49ABF;--ok-zone:#263A20;--warn-zone:#43291A;--bad-zone:#45231C;color-scheme:dark}
+:root[data-hub-palette="cantina"]{--bg:#F7EEEA;--surface:#FFF9F6;--sunk:#F0E2DC;--ink:#2A1418;--muted:#745A5C;--line:#E6D2CC;--accent:#7D1B2B;--accent-ink:#FFF4EE;--accent-soft:#F3DADD;--ok:#3F7A3A;--warn:#9C6B05;--bad:#C0392B;--violet:#6B4E8A;--ok-zone:#D7E8CC;--warn-zone:#F3E3B8;--bad-zone:#F7D3C6;color-scheme:light}
+@media (prefers-color-scheme: dark){:root[data-hub-palette="cantina"]:not([data-hub-theme="light"]){--bg:#170D0F;--surface:#22141A;--sunk:#1C1015;--ink:#F4E6DA;--muted:#B79C98;--line:#3D2730;--accent:#D9A85B;--accent-ink:#1A0F08;--accent-soft:#3B2A1A;--ok:#9CC48A;--warn:#EE8E6B;--bad:#F0757A;--violet:#D49ABF;--ok-zone:#263A20;--warn-zone:#43291A;--bad-zone:#4A1F24;color-scheme:dark}}
+:root[data-hub-palette="cantina"][data-hub-theme="dark"]{--bg:#170D0F;--surface:#22141A;--sunk:#1C1015;--ink:#F4E6DA;--muted:#B79C98;--line:#3D2730;--accent:#D9A85B;--accent-ink:#1A0F08;--accent-soft:#3B2A1A;--ok:#9CC48A;--warn:#EE8E6B;--bad:#F0757A;--violet:#D49ABF;--ok-zone:#263A20;--warn-zone:#43291A;--bad-zone:#4A1F24;color-scheme:dark}
+:root[data-hub-palette="grafite"]{--bg:#F1F1EF;--surface:#FBFBFA;--sunk:#E7E7E4;--ink:#1E1F21;--muted:#62645F;--line:#D9D9D5;--accent:#8A6414;--accent-ink:#FFF9EC;--accent-soft:#F1E4C2;--ok:#3F7A3A;--warn:#A0581E;--bad:#B23A2A;--violet:#6B4E8A;--ok-zone:#D7E8CC;--warn-zone:#F3E3B8;--bad-zone:#F2D0C8;color-scheme:light}
+@media (prefers-color-scheme: dark){:root[data-hub-palette="grafite"]:not([data-hub-theme="light"]){--bg:#17181A;--surface:#212225;--sunk:#1B1C1E;--ink:#ECEAE4;--muted:#A3A19A;--line:#34363A;--accent:#D4A23A;--accent-ink:#17140C;--accent-soft:#3A3220;--ok:#8CC47A;--warn:#E8946A;--bad:#EE7A6A;--violet:#C6A6E0;--ok-zone:#263A20;--warn-zone:#43291A;--bad-zone:#45231C;color-scheme:dark}}
+:root[data-hub-palette="grafite"][data-hub-theme="dark"]{--bg:#17181A;--surface:#212225;--sunk:#1B1C1E;--ink:#ECEAE4;--muted:#A3A19A;--line:#34363A;--accent:#D4A23A;--accent-ink:#17140C;--accent-soft:#3A3220;--ok:#8CC47A;--warn:#E8946A;--bad:#EE7A6A;--violet:#C6A6E0;--ok-zone:#263A20;--warn-zone:#43291A;--bad-zone:#45231C;color-scheme:dark}
+.logo { display: inline-block; height: 27px; aspect-ratio: 600 / 117; background: var(--accent); -webkit-mask: url(icons/logo-mask.png) left center / contain no-repeat; mask: url(icons/logo-mask.png) left center / contain no-repeat; vertical-align: middle; }
+.side .shead .logo { height: 25px; }
+.palgrid { display: grid; grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: 10px; }
+.palbtn { display: grid; gap: 8px; padding: 10px; border-radius: 12px; border: 2px solid var(--line); background: var(--surface); cursor: pointer; text-align: left; }
+.palbtn[aria-pressed="true"] { border-color: var(--accent); }
+.palbtn .palsw { display: flex; height: 44px; border-radius: 8px; overflow: hidden; border: 1px solid rgba(0,0,0,.12); }
+.palbtn .palsw i { flex: 1; }
+.palbtn b { font: 600 14px var(--f-display); }
+.palbtn small { color: var(--muted); font-size: 12px; line-height: 1.3; }
+.modeseg { display: inline-flex; border: 1px solid var(--line); border-radius: 10px; overflow: hidden; }
+.modeseg button { border: 0; background: var(--surface); padding: 8px 14px; font: 600 13px var(--f-display); cursor: pointer; color: var(--muted); }
+.modeseg button + button { border-left: 1px solid var(--line); }
+.modeseg button[aria-pressed="true"] { background: var(--accent); color: var(--accent-ink); }
 /* barra di navigazione in basso (telefono e tablet) */
 .bnav { position: fixed; left: 0; right: 0; bottom: 0; z-index: 25; display: grid; grid-template-columns: repeat(5, 1fr); background: color-mix(in srgb, var(--surface) 92%, transparent); backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px); border-top: 1px solid var(--line); padding: 6px max(6px, var(--safe-l)) calc(var(--safe-b) + 6px) max(6px, var(--safe-r)); }
 .bnav a, .bnav button { display: grid; justify-items: center; gap: 3px; padding: 6px 2px; border: 0; background: none; border-radius: 12px; text-decoration: none; color: var(--muted); font: 600 11px var(--f-display); letter-spacing: .02em; cursor: pointer; min-width: 0; -webkit-tap-highlight-color: transparent; }
@@ -380,12 +406,12 @@ details.x[open] > .more { animation: vtin .18s ease-out; }
 .steps { margin: 0; padding-left: 20px; display: grid; gap: 4px; font-size: 14px; }
 button:disabled { opacity: .55; cursor: default; }
 </style>
-<script id="themeinit">try { const t = localStorage.getItem("hub-theme"); if (t === "light" || t === "dark") document.documentElement.setAttribute("data-hub-theme", t); } catch (e) {}</script>
+<script id="themeinit">try { const t = localStorage.getItem("hub-theme"); if (t === "light" || t === "dark") document.documentElement.setAttribute("data-hub-theme", t); const p = localStorage.getItem("hub-palette") || "vinile"; if (p !== "classica") document.documentElement.setAttribute("data-hub-palette", p); } catch (e) { document.documentElement.setAttribute("data-hub-palette", "vinile"); }</script>
 </head>
 <body>
 <header class="top"><div class="topin">
   <button class="menubtn" id="menubtn" type="button" aria-label="Apri il menu" aria-expanded="false" aria-controls="side"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M4 7h16M4 12h16M4 17h16"/></svg></button>
-  <div class="brand"><b>Bassment <span>Hub</span></b><small>Da Bassment Shaolin · @andreadeblasiobass</small></div>
+  <div class="brand"><b><span class="logo" role="img" aria-label="Bassment Hub"></span></b><small>Da Bassment Shaolin · @andreadeblasiobass</small></div>
   <button class="sync" id="sync" type="button" title="Rileggi il foglio"><i></i><span id="synctxt">Copia salvata</span></button>
   <button class="iconbtn" id="themebtn" type="button" aria-label="Tema: automatico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"></svg></button>
   <button class="iconbtn" id="opensearch" type="button" aria-label="Cerca in tutto il registro"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/></svg></button>
@@ -1522,13 +1548,26 @@ function vSuono() {
 
 /* ================= viste ================= */
 /* ================= impostazioni ================= */
+const PALETTES = {"vinile": {"n": "Vinile", "d": "Petrolio e senape", "l": ["#EDF0EA", "#FBFCF8", "#1E5A5E", "#13282A"], "k": ["#0E1A1B", "#142426", "#E8B84A", "#F1E9D8"]}, "reel": {"n": "Reel", "d": "Giallo e cacao, come i testi dei video", "l": ["#F6F0E2", "#FFFBF2", "#8A6400", "#241D12"], "k": ["#14110D", "#1F1A14", "#FFCB2F", "#FFF0D6"]}, "cantina": {"n": "Cantina", "d": "Bordeaux e ottone", "l": ["#F7EEEA", "#FFF9F6", "#7D1B2B", "#2A1418"], "k": ["#170D0F", "#22141A", "#D9A85B", "#F4E6DA"]}, "grafite": {"n": "Grafite", "d": "Grigio scuro e ocra", "l": ["#F1F1EF", "#FBFBFA", "#8A6414", "#1E1F21"], "k": ["#17181A", "#212225", "#D4A23A", "#ECEAE4"]}, "classica": {"n": "Classica", "d": "Crema e terracotta, quella di prima", "l": ["#F5EFE6", "#FFFCF7", "#A9471C", "#2B2019"], "k": ["#15100C", "#211913", "#F09A5C", "#F2E6D6"]}};
+function curPalette() { try { return localStorage.getItem("hub-palette") || "vinile"; } catch (e) { return "vinile"; } }
+function curMode() { try { return localStorage.getItem("hub-theme") || "auto"; } catch (e) { return "auto"; } }
+function syncThemeColor() { const bg = getComputedStyle(document.documentElement).getPropertyValue("--bg").trim(); document.querySelectorAll('meta[name="theme-color"]').forEach(m => m.setAttribute("content", bg)); }
+function setPalette(k) { try { localStorage.setItem("hub-palette", k); } catch (e) {} if (k === "classica") document.documentElement.removeAttribute("data-hub-palette"); else document.documentElement.setAttribute("data-hub-palette", k); syncThemeColor(); }
+function setMode(m) { try { if (m === "auto") localStorage.removeItem("hub-theme"); else localStorage.setItem("hub-theme", m); } catch (e) {} if (m === "auto") document.documentElement.removeAttribute("data-hub-theme"); else document.documentElement.setAttribute("data-hub-theme", m); const b = document.getElementById("themebtn"); if (b && b._sync) b._sync(m); syncThemeColor(); }
+setTimeout(syncThemeColor, 0);
+matchMedia("(prefers-color-scheme: dark)").addEventListener("change", syncThemeColor);
 const CAT_L = [["uscite", "Uscite e caricamenti", "Video del giorno, da segnare come pubblicati, da caricare su TikTok e YouTube"], ["post", "Post foto, Reddit e video Suono", "Oggi e domani, foto ancora da scattare"], ["scadenze", "Scadenze", "Registrazioni, scorta di video montati, obiettivi"], ["numeri", "Numeri della settimana", "Il promemoria della domenica sera"], ["promemoria", "Promemoria", "Quelli che scrivi nella scheda Promemoria del foglio"]];
 let SET = { cfg: null, push: null, err: "" };
 const hours = sel => Array.from({ length: 24 }, (_, h) => `<option value="${h}" ${h === sel ? "selected" : ""}>${String(h).padStart(2, "0")}:00</option>`).join("");
 function vSet() {
   const c = SET.cfg, api = window.hubApiUrl ? window.hubApiUrl() : "";
   const st = { on: ["Attive su questo dispositivo", "Spegni qui"], off: ["Spente su questo dispositivo", "Attiva qui"], blocked: ["Bloccate dalle impostazioni del sito o dell'app", ""], no: ["Non disponibili qui: sul telefono installa l'app dalla schermata Home", ""] }[SET.push || "no"] || ["…", ""];
-  let h = `<section class="sec"><h2>Notifiche</h2><div class="card pad setgrid">
+  const cp = curPalette(), cm = curMode(), dk = document.documentElement.getAttribute("data-hub-theme") === "dark" || (cm === "auto" && matchMedia("(prefers-color-scheme: dark)").matches);
+  let h = `<section class="sec"><h2>Aspetto</h2><div class="card pad setgrid">
+    <div class="palgrid">${Object.entries(PALETTES).map(([k, x]) => `<button type="button" class="palbtn" data-pal="${k}" aria-pressed="${k === cp}"><span class="palsw">${(dk ? x.k : x.l).map(c => `<i style="background:${c}"></i>`).join("")}</span><b>${esc(x.n)}</b><small>${esc(x.d)}</small></button>`).join("")}</div>
+    <div class="setrow"><b>Chiaro o scuro</b><span class="modeseg">${[["auto", "Automatico"], ["light", "Chiaro"], ["dark", "Scuro"]].map(([k, l]) => `<button type="button" data-mode="${k}" aria-pressed="${k === cm}">${l}</button>`).join("")}</span></div>
+  </div></section>`;
+  h += `<section class="sec"><h2>Notifiche</h2><div class="card pad setgrid">
     <div class="setrow"><div><b>${st[0]}</b><div class="sub">Ogni dispositivo si attiva a parte: telefono e PC.</div></div>${st[1] ? `<button class="btn ${SET.push === "on" ? "" : "primary"}" type="button" id="pushtgl">${st[1]}</button>` : ""}</div>`;
   if (c) {
     h += `<div class="setrow"><label for="sethour"><b>Riepilogo del mattino</b><div class="sub">Nel fuso del telefono (ora: ${esc(c.fuso)})</div></label><select id="sethour" class="sel">${hours(c.ora)}</select></div>
@@ -1562,6 +1601,8 @@ const afterSet = () => {
     catch (err) { toast(String((err && err.message) || err), true); }
     SET.cfg = null; setLoad();
   };
+  document.querySelectorAll("[data-pal]").forEach(b => { b.onclick = () => { setPalette(b.dataset.pal); render(); }; });
+  document.querySelectorAll("[data-mode]").forEach(b => { b.onclick = () => { setMode(b.dataset.mode); render(); }; });
   ["#sethour", "#setsun"].forEach(id => { const x = $(id); if (x) x.onchange = setSave; });
   document.querySelectorAll("[data-cat]").forEach(x => { x.onchange = setSave; });
   const pt = $("#pushtest"); if (pt) pt.onclick = async () => { pt.disabled = true; try { const r = await window.hubApi("pushTest", []); toast(r.sent ? "Prova inviata a " + r.sent + (r.sent === 1 ? " dispositivo." : " dispositivi.") : "Nessun dispositivo iscritto: attiva prima le notifiche qui sopra.", !r.sent); } catch (e) { toast("Invio non riuscito.", true); } pt.disabled = false; };
@@ -1611,7 +1652,7 @@ function menuCount(k) {
 }
 function drawMenu() {
   const svg = k => `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">${IC[k]}</svg>`;
-  $("#side").innerHTML = `<div class="shead"><b>Bassment <span>Hub</span></b><button class="menubtn closebtn" type="button" id="closemenu" aria-label="Chiudi il menu"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M6 6l12 12M18 6 6 18"/></svg></button></div>` +
+  $("#side").innerHTML = `<div class="shead"><b><span class="logo" role="img" aria-label="Bassment Hub"></span></b><button class="menubtn closebtn" type="button" id="closemenu" aria-label="Chiudi il menu"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M6 6l12 12M18 6 6 18"/></svg></button></div>` +
     MENU.map(([gname, items]) => `<div class="grp">${gname}</div>` + items.map(([k, l]) => { const n = menuCount(k); return `<a href="#${k}" data-v="${k}" ${k === view ? 'aria-current="page"' : ""}>${svg(k)}<span>${l}</span>${n !== "" ? `<span class="n">${n}</span>` : ""}</a>`; }).join("")).join("") +
     `<div class="grp">Fuori dall'hub</div><a href="${SHEET_URL}" target="_blank" rel="noopener">${svg("foglio")}<span>Il foglio Google</span></a><div class="foot">@andreadeblasiobass</div>`;
   $("#closemenu").onclick = closeMenu;
@@ -3124,7 +3165,8 @@ const BC = (() => {
     if (say && typeof toast === "function") toast("Tema " + LABEL[t]);
   };
   apply(cur, false);
-  btn.addEventListener("click", () => apply(NEXT[cur], true));
+  btn._sync = t => apply(t, false);
+  btn.addEventListener("click", () => { apply(NEXT[cur], true); if (typeof syncThemeColor === "function") syncThemeColor(); if (typeof view !== "undefined" && view === "impostazioni") render(); });
 }
 </script>
 <script>if ("serviceWorker" in navigator) addEventListener("load", () => navigator.serviceWorker.register("sw.js").catch(() => {}));</script>

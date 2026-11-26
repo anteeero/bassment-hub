@@ -12,6 +12,7 @@ App (PWA) per il registro di [@andreadeblasiobass](https://instagram.com/andread
 - Modifiche al motore (`apps-script/`): vanno incollate nell'editor di Apps Script e serve una **nuova versione** della distribuzione "API app (PWA)". Nell'editor, `Code.gs` corrisponde a "Codice.gs"; `Push.gs` + `Notify.gs` stanno insieme nel file "Senza titolo.gs".
 
 ## Funzioni
+- Aspetto (Impostazioni → Aspetto): palette Vinile (predefinita), Reel, Cantina, Grafite e Classica, ognuna chiara e scura. Il logo è un'immagine-maschera (`icons/logo-mask.png`, disegnata con Estrella: il file del font non è nel repository) che prende il colore della palette.
 - Barra di navigazione in basso su telefono e tablet; menu laterale fisso su schermi larghi.
 - Didascalie Instagram/YouTube e TikTok lette dai documenti "Didascalie" su Drive, da copiare con un tocco.
 - Impostazioni (menu → App → Impostazioni): notifiche, orari, categorie, calendario per Google Calendar (`…/exec?ics=1`), collegamento al foglio.
