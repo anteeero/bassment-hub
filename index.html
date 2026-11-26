@@ -336,6 +336,49 @@ footer.f { color: var(--muted); font-size: 12px; text-align: center; padding-top
 .setupin input { font: 14px var(--f-mono); padding: 10px 12px; border-radius: 8px; border: 1px solid var(--line); background: var(--bg); color: var(--ink); width: 100%; }
 .setupin .setupmsg { color: var(--ink); min-height: 1.4em; }
 .setupbtns { display: flex; gap: 8px; justify-content: flex-end; }
+/* barra di navigazione in basso (telefono e tablet) */
+.bnav { position: fixed; left: 0; right: 0; bottom: 0; z-index: 25; display: grid; grid-template-columns: repeat(5, 1fr); background: color-mix(in srgb, var(--surface) 92%, transparent); backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px); border-top: 1px solid var(--line); padding: 6px max(6px, var(--safe-l)) calc(var(--safe-b) + 6px) max(6px, var(--safe-r)); }
+.bnav a, .bnav button { display: grid; justify-items: center; gap: 3px; padding: 6px 2px; border: 0; background: none; border-radius: 12px; text-decoration: none; color: var(--muted); font: 600 11px var(--f-display); letter-spacing: .02em; cursor: pointer; min-width: 0; -webkit-tap-highlight-color: transparent; }
+.bnav span { max-width: 100%; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.bnav svg { width: 23px; height: 23px; transition: transform .15s; }
+.bnav [aria-current="page"] { color: var(--accent); }
+.bnav [aria-current="page"] svg { transform: translateY(-1px) scale(1.06); }
+.bnav a:active svg, .bnav button:active svg { transform: scale(.9); }
+main { padding-bottom: calc(var(--safe-b) + 96px); }
+.toast { bottom: calc(var(--safe-b) + 84px); }
+@media (min-width: 1100px) { .bnav { display: none; } main { padding-bottom: 60px; } .toast { bottom: calc(var(--safe-b) + 18px); } }
+@media (max-width: 1099px) { header.top .menubtn { display: none; } }
+/* tira giù per aggiornare */
+.ptr { height: 0; display: grid; place-items: center; overflow: hidden; transition: height .2s; margin-bottom: -22px; }
+.ptr span { width: 26px; height: 26px; border-radius: 50%; border: 3px solid var(--line); border-top-color: var(--accent); opacity: 0; transition: opacity .15s; }
+.ptr.pull span { opacity: 1; }
+.ptr.go span { opacity: 1; animation: spin .8s linear infinite; }
+@keyframes spin { to { transform: rotate(360deg); } }
+/* transizioni tra sezioni */
+::view-transition-old(root) { animation: vtout .14s ease-in both; }
+::view-transition-new(root) { animation: vtin .2s ease-out both; }
+@keyframes vtout { to { opacity: 0; transform: translateY(-4px); } }
+@keyframes vtin { from { opacity: 0; transform: translateY(6px); } }
+details.x[open] > .more { animation: vtin .18s ease-out; }
+/* didascalie */
+.cap { display: grid; gap: 8px; border: 1px solid var(--line); border-radius: 10px; padding: 12px; background: var(--bg); }
+.captext { margin: 0; white-space: pre-line; font-size: 14px; max-height: 9.5em; overflow: auto; }
+.capnote { margin: 0; font-size: 12.5px; color: var(--muted); font-style: italic; }
+.capbtns { display: flex; gap: 8px; flex-wrap: wrap; }
+.capbtns .btn { display: inline-flex; align-items: center; gap: 7px; }
+.capbtns svg { width: 16px; height: 16px; }
+/* impostazioni */
+.setgrid { display: grid; gap: 14px; }
+.setrow { display: flex; align-items: center; justify-content: space-between; gap: 12px; flex-wrap: wrap; }
+.setrow .sub { font-size: 13px; }
+.sel { font: 500 14px var(--f-body); padding: 8px 10px; border-radius: 8px; border: 1px solid var(--line); background: var(--surface); color: var(--ink); }
+.setcats { display: grid; gap: 4px; border-top: 1px solid var(--line); border-bottom: 1px solid var(--line); padding: 8px 0; }
+.setcat { display: flex; gap: 12px; align-items: flex-start; padding: 8px 2px; cursor: pointer; }
+.setcat input { width: 20px; height: 20px; accent-color: var(--accent); margin-top: 2px; flex: none; }
+.setcat > span { display: grid; }
+.setcat .sub { font-size: 13px; }
+.steps { margin: 0; padding-left: 20px; display: grid; gap: 4px; font-size: 14px; }
+button:disabled { opacity: .55; cursor: default; }
 </style>
 <script id="themeinit">try { const t = localStorage.getItem("hub-theme"); if (t === "light" || t === "dark") document.documentElement.setAttribute("data-hub-theme", t); } catch (e) {}</script>
 </head>
@@ -349,7 +392,8 @@ footer.f { color: var(--muted); font-size: 12px; text-align: center; padding-top
 </div></header>
 <div class="scrim" id="scrim"></div>
 <nav class="side" id="side" aria-label="Sezioni"></nav>
-<main><div id="main" class="vgrid"></div><div id="checkview" hidden></div></main>
+<main><div id="ptr" class="ptr" aria-hidden="true"><span></span></div><div id="main" class="vgrid"></div><div id="checkview" hidden></div></main>
+<nav class="bnav" id="bnav" aria-label="Sezioni principali"></nav>
 <template id="check-tpl"><style>:host { display: block; color: var(--ink); font-family: var(--f-body); font-size: 15px; line-height: 1.5; }
 *,*::before,*::after{box-sizing:border-box}
 
@@ -624,6 +668,8 @@ header .label { display: none; }
     }
   };
   window.claude = { use: async k => (!API ? null : k === "mcp" ? mcp : k === "db" ? db : null) };
+  window.hubApi = (fn, args) => call(fn, args || []);
+  window.hubApiUrl = () => API;
 
   /* ---- schermata di collegamento (prima apertura, o dal menu) ---- */
   function setupHtml() {
@@ -939,9 +985,49 @@ DATA = parseAll(RAW);
 
 /* ================= righe riutilizzabili ================= */
 function dateBox(d) { return `<div class="date"><span class="wd">${WD[d.getDay()]}</span><span class="d">${d.getDate()}</span><span class="m">${MO[d.getMonth()]}</span></div>`; }
+/* ---- didascalie (dai documenti Instagram e TikTok) ---- */
+let CAPT = null;
+try { CAPT = JSON.parse(localStorage.getItem("hub-capt") || "null"); } catch (e) {}
+let captBusy = false;
+async function loadCaptions(force) {
+  if (captBusy || !window.hubApi || !window.hubApiUrl()) return;
+  if (!force && CAPT && Date.now() - (CAPT.t || 0) < 36e5) return;
+  captBusy = true;
+  try { CAPT = await window.hubApi("captions", []); try { localStorage.setItem("hub-capt", JSON.stringify(CAPT)); } catch (e) {} render(); } catch (e) {}
+  captBusy = false;
+}
+const keyCap = s => norm(s).replace(/[^a-z0-9]+/g, "");
+function findCap(map, title) {
+  if (!map) return null;
+  const k = norm(title); if (map[k]) return map[k];
+  const kk = keyCap(title); for (const x of Object.values(map)) { const t = keyCap(x.title); if (t && (t === kk || t.startsWith(kk) || kk.startsWith(t))) return x; }
+  return null;
+}
+function capBlock(v) {
+  if (!CAPT) return `<div class="cap"><span class="label">Didascalia</span><p class="sub" style="margin:0">Carico le didascalie dai documenti…</p></div>`;
+  const ig = findCap(CAPT.ig, v.video), tt = findCap(CAPT.tt, v.video);
+  if (!ig && !tt) return `<div class="cap"><span class="label">Didascalia</span><p class="sub" style="margin:0">Non c'è nei documenti delle didascalie.</p></div>`;
+  const btn = (x, pl) => x ? `<button type="button" class="btn" data-copycap="${pl}" data-title="${esc(v.video)}">${`<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">${IC.copia}</svg>`}Copia per ${pl === "ig" ? "Instagram e YouTube" : "TikTok"}</button>` : "";
+  const note = (ig && ig.note) || (tt && tt.note);
+  return `<div class="cap"><span class="label">Didascalia</span><p class="captext">${esc((ig || tt).text)}</p>${note ? `<p class="capnote">${esc(note)}</p>` : ""}<div class="capbtns">${btn(ig, "ig")}${btn(tt, "tt")}</div></div>`;
+}
+document.addEventListener("click", async e => {
+  const b = e.target.closest("[data-copycap]"); if (!b) return;
+  e.preventDefault(); e.stopPropagation();
+  const x = findCap(b.dataset.copycap === "ig" ? CAPT.ig : CAPT.tt, b.dataset.title);
+  if (!x) return;
+  try { await navigator.clipboard.writeText(x.text); toast("Didascalia copiata: incollala in " + (b.dataset.copycap === "ig" ? "Instagram o YouTube" : "TikTok") + "."); }
+  catch (err) { toast("Non riesco a copiare: tieni premuto sul testo e copialo a mano.", true); }
+});
+function heroCap(v) {
+  if (!CAPT) return "";
+  const ig = findCap(CAPT.ig, v.video), tt = findCap(CAPT.tt, v.video);
+  const b = (x, pl) => x ? `<button type="button" class="btn" data-copycap="${pl}" data-title="${esc(v.video)}"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">${IC.copia}</svg>Didascalia ${pl === "ig" ? "IG/YT" : "TikTok"}</button>` : "";
+  return ig || tt ? `<div class="capbtns">${b(ig, "ig")}${b(tt, "tt")}</div>` : "";
+}
 function videoMore(v) {
   const kv = [["Gancio", v.gancio], ["Origine del basso", v.origine], ["Formato", v.formato], ["Notorietà", v.noto], ["Outfit", v.outfit], ["Basso", v.basso], ["Programmato", v.prog ? "Sì" : "No"], ["Stagione", v.season + "ª · sett. " + v.sett]].filter(x => x[1]);
-  return `<div class="more">${v.perche ? `<p class="why" style="margin:0">${esc(v.perche)}</p>` : ""}<dl class="kv">${kv.map(([k, x]) => `<dt>${k}</dt><dd>${esc(x)}</dd>`).join("")}</dl>${videoEdit(v)}</div>`;
+  return `<div class="more">${v.perche ? `<p class="why" style="margin:0">${esc(v.perche)}</p>` : ""}<dl class="kv">${kv.map(([k, x]) => `<dt>${k}</dt><dd>${esc(x)}</dd>`).join("")}</dl>${capBlock(v)}${videoEdit(v)}</div>`;
 }
 const PL_KEY = { TikTok: "tt", YouTube: "yt" };
 const plShort = pl => pl === "Instagram" ? "IG" : pl === "TikTok" ? "TT" : "YT";
@@ -980,11 +1066,9 @@ async function writeCell(src, row, field, expect, value) {
   const c = srcCols(src), ci = c[field], ki = c[KEYF[src]];
   if (!(ci >= 0) || !(ki >= 0)) throw { code: "no_col" };
   const T = "'" + TITLES[src] + "'!";
-  const chk = await mcp.callTool("Google Sheets", "get_values", { spreadsheetId: SHEET_ID, range: T + colL(ki) + row }, { cache: false });
-  const cur = ((payloadValues(chk) || [])[0] || [])[0] || "";
-  if (norm(cur) !== norm(expect)) throw { code: "moved" };
   if (TEXTF.has(field)) value = safeTxt(value);
-  await mcp.callTool("Google Sheets", "update_values", { spreadsheetId: SHEET_ID, range: T + colL(ci) + row, values: [[value]] }, { cache: false });
+  const res = await window.hubApi("hubSet", [{ range: T + colL(ci) + row, keyRange: T + colL(ki) + row, expect, value }]);
+  if (res && res.moved) throw { code: "moved" };
   RAW[src] = (RAW[src] || []).map(r => (r || []).slice());
   while (RAW[src].length < row) RAW[src].push([]);
   const r = RAW[src][row - 1]; while (r.length <= ci) r.push("");
@@ -1437,7 +1521,55 @@ function vSuono() {
 }
 
 /* ================= viste ================= */
-const VIEWS = { oggi: vOggi, calendario: vCal, foto: vFoto, reddit: vReddit, suono: vSuono, registra: vReg, repertorio: vRep, dischi: vDis, numeri: vNum, check: vCheck, rete: vRete, account: vAcc, legenda: vLeg };
+/* ================= impostazioni ================= */
+const CAT_L = [["uscite", "Uscite e caricamenti", "Video del giorno, da segnare come pubblicati, da caricare su TikTok e YouTube"], ["post", "Post foto, Reddit e video Suono", "Oggi e domani, foto ancora da scattare"], ["scadenze", "Scadenze", "Registrazioni, scorta di video montati, obiettivi"], ["numeri", "Numeri della settimana", "Il promemoria della domenica sera"], ["promemoria", "Promemoria", "Quelli che scrivi nella scheda Promemoria del foglio"]];
+let SET = { cfg: null, push: null, err: "" };
+const hours = sel => Array.from({ length: 24 }, (_, h) => `<option value="${h}" ${h === sel ? "selected" : ""}>${String(h).padStart(2, "0")}:00</option>`).join("");
+function vSet() {
+  const c = SET.cfg, api = window.hubApiUrl ? window.hubApiUrl() : "";
+  const st = { on: ["Attive su questo dispositivo", "Spegni qui"], off: ["Spente su questo dispositivo", "Attiva qui"], blocked: ["Bloccate dalle impostazioni del sito o dell'app", ""], no: ["Non disponibili qui: sul telefono installa l'app dalla schermata Home", ""] }[SET.push || "no"] || ["…", ""];
+  let h = `<section class="sec"><h2>Notifiche</h2><div class="card pad setgrid">
+    <div class="setrow"><div><b>${st[0]}</b><div class="sub">Ogni dispositivo si attiva a parte: telefono e PC.</div></div>${st[1] ? `<button class="btn ${SET.push === "on" ? "" : "primary"}" type="button" id="pushtgl">${st[1]}</button>` : ""}</div>`;
+  if (c) {
+    h += `<div class="setrow"><label for="sethour"><b>Riepilogo del mattino</b><div class="sub">Nel fuso del telefono (ora: ${esc(c.fuso)})</div></label><select id="sethour" class="sel">${hours(c.ora)}</select></div>
+    <div class="setrow"><label for="setsun"><b>Numeri della settimana</b><div class="sub">La domenica</div></label><select id="setsun" class="sel">${hours(c.oraDomenica)}</select></div>
+    <div class="setcats">${CAT_L.map(([k, l, d]) => `<label class="setcat"><input type="checkbox" data-cat="${k}" ${c.spente.includes(k) ? "" : "checked"}><span><b>${l}</b><span class="sub">${d}</span></span></label>`).join("")}</div>
+    <div class="setrow"><span class="sub">Dispositivi iscritti: ${c.dispositivi.length ? c.dispositivi.map(esc).join(", ") : "nessuno"}</span><button class="btn" type="button" id="pushtest">Manda una prova</button></div>`;
+  } else h += `<p class="sub" style="margin:0">${SET.err ? esc(SET.err) : "Leggo le impostazioni…"}</p>`;
+  h += `</div></section>`;
+  h += `<section class="sec"><h2>Calendario</h2><div class="card pad setgrid"><p style="margin:0">Uscite, post foto, Reddit, video Suono e promemoria dentro Google Calendar, aggiornati da soli (Google li rilegge ogni qualche ora).</p>
+    <ol class="steps"><li>Copia l'indirizzo con il bottone qui sotto.</li><li>Dal PC apri Google Calendar → <b>Altri calendari</b> (+) → <b>Da URL</b>.</li><li>Incolla e premi <b>Aggiungi calendario</b>. Sul telefono compare da solo.</li></ol>
+    <div><button class="btn primary" type="button" id="copyics" ${api ? "" : "disabled"}>Copia indirizzo del calendario</button></div><p class="sub" style="margin:0">L'indirizzo contiene la chiave del motore dati: non condividerlo.</p></div></section>`;
+  h += `<section class="sec"><h2>Collegamento al foglio</h2><div class="card pad setrow"><div><b>${api ? "Collegata" : "Non collegata"}</b><div class="sub mono">${api ? esc(api.replace(/(\/s\/.{6}).+(.{4}\/exec)$/, "$1…$2")) : ""}</div></div><button class="btn" type="button" id="setlink">Cambia</button></div></section>`;
+  h += `<section class="sec"><h2>Didascalie</h2><div class="card pad setrow"><div><b>${CAPT ? Object.keys(CAPT.ig || {}).length + " Instagram · " + Object.keys(CAPT.tt || {}).length + " TikTok" : "Non ancora caricate"}</b><div class="sub">Dai documenti "Didascalie" su Drive${CAPT ? " · aggiornate " + fmtTime(CAPT.t) : ""}</div></div><button class="btn" type="button" id="capreload">Ricarica</button></div></section>`;
+  return h;
+}
+async function setLoad() {
+  try { SET.push = window.hubPush ? await window.hubPush.state() : "no"; } catch (e) { SET.push = "no"; }
+  try { SET.cfg = await window.hubApi("notifCfg", []); SET.err = ""; } catch (e) { SET.err = "Non riesco a leggere le impostazioni dal motore dati."; }
+  if (view === "impostazioni") render();
+}
+async function setSave() {
+  const ora = +$("#sethour").value, oraDomenica = +$("#setsun").value;
+  const spente = [...document.querySelectorAll("[data-cat]")].filter(x => !x.checked).map(x => x.dataset.cat);
+  try { SET.cfg = await window.hubApi("notifCfgSet", [{ ora, oraDomenica, spente }]); toast("Impostazioni salvate."); } catch (e) { toast("Non sono riuscito a salvare: riprova.", true); }
+}
+const afterSet = () => {
+  if (!SET.cfg && !SET.err && !SET.loading) { SET.loading = true; setLoad().finally(() => { SET.loading = false; }); }
+  const t = $("#pushtgl"); if (t) t.onclick = async () => {
+    t.disabled = true;
+    try { if (SET.push === "on") { await window.hubPush.disable(); toast("Notifiche spente su questo dispositivo."); } else { await window.hubPush.enable(); toast("Notifiche attive: tra poco arriva quella di prova."); } }
+    catch (err) { toast(String((err && err.message) || err), true); }
+    SET.cfg = null; setLoad();
+  };
+  ["#sethour", "#setsun"].forEach(id => { const x = $(id); if (x) x.onchange = setSave; });
+  document.querySelectorAll("[data-cat]").forEach(x => { x.onchange = setSave; });
+  const pt = $("#pushtest"); if (pt) pt.onclick = async () => { pt.disabled = true; try { const r = await window.hubApi("pushTest", []); toast(r.sent ? "Prova inviata a " + r.sent + (r.sent === 1 ? " dispositivo." : " dispositivi.") : "Nessun dispositivo iscritto: attiva prima le notifiche qui sopra.", !r.sent); } catch (e) { toast("Invio non riuscito.", true); } pt.disabled = false; };
+  const ci = $("#copyics"); if (ci) ci.onclick = async () => { try { await navigator.clipboard.writeText(window.hubApiUrl() + "?ics=1"); toast("Indirizzo del calendario copiato."); } catch (e) { toast("Non riesco a copiare.", true); } };
+  const sl = $("#setlink"); if (sl) sl.onclick = () => window.hubSetup();
+  const cr = $("#capreload"); if (cr) cr.onclick = () => { toast("Ricarico le didascalie…"); loadCaptions(true); };
+};
+const VIEWS = { impostazioni: vSet, oggi: vOggi, calendario: vCal, foto: vFoto, reddit: vReddit, suono: vSuono, registra: vReg, repertorio: vRep, dischi: vDis, numeri: vNum, check: vCheck, rete: vRete, account: vAcc, legenda: vLeg };
 const ALIAS = { altro: "dischi" };
 const IC = {
   oggi: '<circle cx="12" cy="12" r="9"/><circle cx="12" cy="12" r="2.5"/>',
@@ -1453,14 +1585,18 @@ const IC = {
   rete: '<circle cx="8" cy="9" r="3"/><circle cx="17" cy="8" r="2.5"/><path d="M2.5 19c.6-3 2.8-5 5.5-5s4.9 2 5.5 5M14 14.5c2.6-.6 5.6.8 6.5 4.5"/>',
   account: '<circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5M8.5 11h5M11 8.5v5"/>',
   legenda: '<path d="M5 4h11l3 3v13H5z"/><path d="M9 10h6M9 14h6"/>',
-  foglio: '<rect x="4" y="3" width="16" height="18" rx="2"/><path d="M4 9h16M4 15h16M10 3v18"/>'
+  foglio: '<rect x="4" y="3" width="16" height="18" rx="2"/><path d="M4 9h16M4 15h16M10 3v18"/>',
+  impostazioni: '<circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.7 1.7 0 0 0 .3 1.8l.1.1a2 2 0 1 1-2.8 2.8l-.1-.1a1.7 1.7 0 0 0-1.8-.3 1.7 1.7 0 0 0-1 1.5V21a2 2 0 1 1-4 0v-.1a1.7 1.7 0 0 0-1.1-1.5 1.7 1.7 0 0 0-1.8.3l-.1.1a2 2 0 1 1-2.8-2.8l.1-.1a1.7 1.7 0 0 0 .3-1.8 1.7 1.7 0 0 0-1.5-1H3a2 2 0 1 1 0-4h.1a1.7 1.7 0 0 0 1.5-1.1 1.7 1.7 0 0 0-.3-1.8l-.1-.1a2 2 0 1 1 2.8-2.8l.1.1a1.7 1.7 0 0 0 1.8.3H9a1.7 1.7 0 0 0 1-1.5V3a2 2 0 1 1 4 0v.1a1.7 1.7 0 0 0 1 1.5 1.7 1.7 0 0 0 1.8-.3l.1-.1a2 2 0 1 1 2.8 2.8l-.1.1a1.7 1.7 0 0 0-.3 1.8V9a1.7 1.7 0 0 0 1.5 1H21a2 2 0 1 1 0 4h-.1a1.7 1.7 0 0 0-1.5 1z"/>',
+  altro: '<circle cx="5" cy="12" r="1.6"/><circle cx="12" cy="12" r="1.6"/><circle cx="19" cy="12" r="1.6"/>',
+  copia: '<rect x="8" y="8" width="12" height="12" rx="2"/><path d="M16 8V6a2 2 0 0 0-2-2H6a2 2 0 0 0-2 2v8a2 2 0 0 0 2 2h2"/>'
 };
 const MENU = [
   ["Pubblicazione", [["oggi", "Oggi"], ["calendario", "Calendario"], ["foto", "Post foto"], ["reddit", "Reddit"], ["suono", "Video Suono"], ["registra", "Ordine di registrazione"]]],
   ["Brani", [["repertorio", "Repertorio"], ["dischi", "Dischi da scremare"]]],
   ["Analisi", [["numeri", "Numeri"], ["check", "Check del mix"]]],
   ["Persone", [["rete", "Rete · produttori"], ["account", "Account da studiare"]]],
-  ["Riferimenti", [["legenda", "Legenda"]]]
+  ["Riferimenti", [["legenda", "Legenda"]]],
+  ["App", [["impostazioni", "Impostazioni"]]]
 ];
 function menuCount(k) {
   if (k === "suono") return DATA.su.filter(x => x.date && !suDone(x) && dayDiff(x.date) <= 14).length || "";
@@ -1477,22 +1613,12 @@ function drawMenu() {
   const svg = k => `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">${IC[k]}</svg>`;
   $("#side").innerHTML = `<div class="shead"><b>Bassment <span>Hub</span></b><button class="menubtn closebtn" type="button" id="closemenu" aria-label="Chiudi il menu"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M6 6l12 12M18 6 6 18"/></svg></button></div>` +
     MENU.map(([gname, items]) => `<div class="grp">${gname}</div>` + items.map(([k, l]) => { const n = menuCount(k); return `<a href="#${k}" data-v="${k}" ${k === view ? 'aria-current="page"' : ""}>${svg(k)}<span>${l}</span>${n !== "" ? `<span class="n">${n}</span>` : ""}</a>`; }).join("")).join("") +
-    `<div class="grp">Fuori dall'hub</div><a href="${SHEET_URL}" target="_blank" rel="noopener">${svg("foglio")}<span>Il foglio Google</span></a><a href="#" data-push><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 8a6 6 0 0 1 12 0c0 7 3 9 3 9H3s3-2 3-9"/><path d="M10.3 21a1.94 1.94 0 0 0 3.4 0"/></svg><span>Notifiche</span><span class="n" id="pushst"></span></a><a href="#" data-setup>${svg("foglio")}<span>Collegamento al foglio</span></a><div class="foot">@andreadeblasiobass</div>`;
+    `<div class="grp">Fuori dall'hub</div><a href="${SHEET_URL}" target="_blank" rel="noopener">${svg("foglio")}<span>Il foglio Google</span></a><div class="foot">@andreadeblasiobass</div>`;
   $("#closemenu").onclick = closeMenu;
-  const su = $("#side [data-setup]"); if (su) su.onclick = e => { e.preventDefault(); closeMenu(); window.hubSetup(); };
-  const pu = $("#side [data-push]"), pst = $("#pushst");
-  const showPush = st => { if (pst) pst.textContent = { on: "attive", off: "spente", blocked: "bloccate", no: "—" }[st] || ""; };
-  if (pu && window.hubPush) {
-    window.hubPush.state().then(showPush).catch(() => {});
-    pu.onclick = async e => {
-      e.preventDefault();
-      const st = await window.hubPush.state().catch(() => "no");
-      try {
-        if (st === "on") { if (!confirm("Spegnere le notifiche su questo dispositivo?")) return; showPush(await window.hubPush.disable()); toast("Notifiche spente su questo dispositivo."); }
-        else { if (pst) pst.textContent = "attivo…"; showPush(await window.hubPush.enable()); toast("Notifiche attive: tra poco ne arriva una di prova."); }
-      } catch (err) { showPush(await window.hubPush.state().catch(() => "no")); toast(String((err && err.message) || err), true); }
-    };
-  }
+  const BN = [["oggi", "Oggi"], ["calendario", "Calendario"], ["repertorio", "Repertorio"], ["numeri", "Numeri"]];
+  const inBn = BN.some(([k]) => k === view);
+  $("#bnav").innerHTML = BN.map(([k, l]) => `<a href="#${k}" ${k === view ? 'aria-current="page"' : ""}>${svg(k)}<span>${l}</span></a>`).join("") + `<button type="button" id="bnmore" ${!inBn ? 'aria-current="page"' : ""}>${svg("altro")}<span>${!inBn && view !== "oggi" ? esc((MENU.flatMap(g => g[1]).find(x => x[0] === view) || [, "Altro"])[1]) : "Altro"}</span></button>`;
+  $("#bnmore").onclick = openMenu;
 }
 function openMenu() { $("#side").classList.add("open"); $("#scrim").classList.add("on"); $("#menubtn").setAttribute("aria-expanded", "true"); const a = $("#side a[aria-current]") || $("#side a"); if (a) setTimeout(() => a.focus(), 50); }
 function closeMenu() { if (!$("#side").classList.contains("open")) return; $("#side").classList.remove("open"); $("#scrim").classList.remove("on"); $("#menubtn").setAttribute("aria-expanded", "false"); }
@@ -1515,6 +1641,7 @@ function render() {
   formVals.forEach(([k, f, v]) => { const x = $("#main").querySelector(`[data-${k}="${f}"]`); if (x) x.value = v; });
 }
 const AFTER = {};
+AFTER.impostazioni = afterSet;
 AFTER.reddit = drawKarmaForm;
 
 function vOggi() {
@@ -1539,7 +1666,7 @@ function vOggi() {
       <div class="chips">${stChip(hero.stato)}${hero.basso ? `<span class="chip">${bassDot(hero.basso)}${esc(hero.basso)}</span>` : ""}${hero.outfit ? `<span class="chip">${outfitSw(hero.outfit)}${esc(hero.outfit)}</span>` : ""}${hero.noto ? `<span class="chip">${esc(hero.noto)}</span>` : ""}${hero.origine ? `<span class="chip ${norm(hero.origine) === "da verificare" ? "warn" : ""}">${esc(hero.origine)}</span>` : ""}${hero.prog ? `<span class="chip st-programmato">in programma su IG</span>` : ""}</div>
       ${hero.gancio && hero.gancio !== "?" ? `<div class="hook"><span class="label">Gancio a schermo</span>${esc(hero.gancio)}</div>` : ""}
       ${hero.perche ? `<div><p class="why clamp" id="herowhy">${esc(hero.perche)}</p><button class="linkbtn" type="button" id="herowhybtn">Leggi tutto</button></div>` : ""}
-      <p class="sub" style="font-size:13px">Instagram ${fmtShort(hero.date)} · TikTok e YouTube il giorno dopo (${fmtShort(pub)})</p></section>`;
+      <p class="sub" style="font-size:13px">Instagram ${fmtShort(hero.date)} · TikTok e YouTube il giorno dopo (${fmtShort(pub)})</p>${heroCap(hero)}</section>`;
   } else h += `<section class="card pad empty">Nessuna uscita futura in calendario.</section>`;
 
   const nf = DATA.foto.find(f => f.date >= t0);
@@ -2288,7 +2415,11 @@ async function goLive(fresh) {
 }
 
 /* ================= avvio ================= */
-function route() { let h = location.hash.replace("#", ""); h = ALIAS[h] || h; view = VIEWS[h] ? h : "oggi"; closeMenu(); render(); window.scrollTo(0, 0); }
+function route() {
+  let h = location.hash.replace("#", ""); h = ALIAS[h] || h; const next = VIEWS[h] ? h : "oggi";
+  const go = () => { view = next; closeMenu(); render(); window.scrollTo(0, 0); };
+  if (document.startViewTransition && view !== next && !matchMedia("(prefers-reduced-motion: reduce)").matches) { try { const t = document.startViewTransition(go); [t.ready, t.finished, t.updateCallbackDone].forEach(x => x && x.catch(() => {})); } catch (e) { go(); } } else go();
+}
 window.addEventListener("hashchange", route);
 document.addEventListener("click", e => {
   const a = e.target.closest("[data-artist]");
@@ -2309,6 +2440,14 @@ route();
   try { mcp = window.claude && typeof window.claude.use === "function" ? await window.claude.use("mcp") : null; } catch (e) { mcp = null; }
   if (mcp && !SNAP_OK) goLive(false); else syncIdle();
 })();
+/* tira giù per aggiornare (solo touch, quando sei in cima alla pagina) */
+(() => {
+  let y0 = null, d = 0; const el = $("#ptr");
+  addEventListener("touchstart", e => { y0 = scrollY <= 0 && !document.querySelector(".setup, nav.side.open") && $("#overlay").hidden && view !== "check" ? e.touches[0].clientY : null; d = 0; }, { passive: true });
+  addEventListener("touchmove", e => { if (y0 == null) return; d = Math.max(0, e.touches[0].clientY - y0); if (scrollY > 0) { y0 = null; d = 0; } el.style.height = Math.min(70, d * .45) + "px"; el.classList.toggle("pull", d > 40); }, { passive: true });
+  addEventListener("touchend", () => { if (y0 == null) return; y0 = null; if (d > 140 && mcp && !busy) { el.classList.add("go"); el.style.height = "46px"; Promise.resolve(goLive(true)).finally(() => { el.classList.remove("go", "pull"); el.style.height = "0"; }); loadCaptions(true); } else { el.classList.remove("pull"); el.style.height = "0"; } d = 0; });
+})();
+setTimeout(() => loadCaptions(false), 1500);
 document.addEventListener("visibilitychange", () => { if (document.visibilityState === "visible" && mcp && Date.now() - liveTime > 5 * 60000) goLive(false); });
 </script>
 <script>

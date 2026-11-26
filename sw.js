@@ -2,7 +2,7 @@
    La pagina arriva dalla rete se risponde entro 2,5 s (così gli aggiornamenti arrivano subito),
    altrimenti dalla copia salvata: l'app si apre anche offline.
    Notifiche: il server manda una "spinta" vuota; qui si chiede all'API cosa c'è di nuovo e lo si mostra. */
-const VERSION = "hub-v2";
+const VERSION = "hub-v3";
 const KEEP = ["hub-config"];
 const SHELL = ["./", "./index.html", "./manifest.webmanifest", "./icons/icon-192.png", "./icons/icon-512.png", "./icons/badge-96.png"];
 
@@ -54,12 +54,38 @@ async function onPush() {
     return self.registration.showNotification("Bassment Hub", { body: "Ci sono novità: apri l'app per vederle.", icon: ICON, badge: BADGE, tag: "hub-generic", data: { view: "oggi" } });
   }
   if (!items.length) return self.registration.showNotification("Bassment Hub", { body: "Tutto aggiornato.", icon: ICON, badge: BADGE, tag: "hub-generic", silent: true, data: { view: "oggi" } });
-  for (const it of items) await self.registration.showNotification(it.title, { body: it.body, icon: ICON, badge: BADGE, tag: "hub-" + it.id, timestamp: it.t, data: { view: it.view || "oggi" } });
+  for (const it of items) await showItem(it);
+}
+function showItem(it, extra) {
+  const acts = (it.actions || []).slice(0, 2);
+  return self.registration.showNotification(it.title, {
+    body: (extra ? extra + " · " : "") + it.body, icon: ICON, badge: BADGE, tag: "hub-" + it.id, timestamp: it.t, renotify: false,
+    actions: acts.map(a => ({ action: a.id, title: a.title })),
+    data: { view: it.view || "oggi", item: it }
+  });
+}
+async function doAction(n, actionId) {
+  const it = n.data && n.data.item, a = it && (it.actions || []).find(x => x.id === actionId);
+  if (!a) return;
+  const cfg = await readCfg();
+  try {
+    const r = await fetch(cfg.api, { method: "POST", body: JSON.stringify({ fn: "hubSet", args: [a.set] }), redirect: "follow", cache: "no-store" });
+    const j = JSON.parse(await r.text());
+    if (!j.ok) throw new Error(j.error);
+    if (j.data && j.data.moved) throw new Error("moved");
+    const rest = Object.assign({}, it, { actions: it.actions.filter(x => x.id !== actionId) });
+    if (rest.actions.length) return showItem(rest, "✓ " + a.done);
+    return self.registration.showNotification("✓ " + a.done, { body: it.title.replace(/^[^:]+:\s*/, ""), icon: ICON, badge: BADGE, tag: "hub-" + it.id, silent: true, data: { view: it.view } });
+  } catch (e) {
+    const moved = String(e && e.message) === "moved";
+    return self.registration.showNotification(moved ? "Il foglio è cambiato" : "Non sono riuscito a segnarlo", { body: moved ? "La riga non corrisponde più: apri l'app e fallo da lì." : "Apri l'app e riprova da lì.", icon: ICON, badge: BADGE, tag: "hub-" + it.id, data: { view: it.view } });
+  }
 }
 self.addEventListener("push", e => { e.waitUntil(onPush()); });
 
 self.addEventListener("notificationclick", e => {
   e.notification.close();
+  if (e.action) { e.waitUntil(doAction(e.notification, e.action)); return; }
   const view = (e.notification.data && e.notification.data.view) || "oggi";
   const target = new URL("./#" + view, self.registration.scope).href;
   e.waitUntil(self.clients.matchAll({ type: "window", includeUncontrolled: true }).then(list => {

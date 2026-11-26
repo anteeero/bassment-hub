@@ -1,7 +1,7 @@
 /**
  * Bassment Hub — motore dei dati (Apps Script).
  * Collega l'Hub al foglio "Registro Definitivo Da Bassment Shaolin".
- *  - doGet senza parametri: la vecchia versione web dell'Hub (Index.html), solo per te.
+ *  - doGet: ?ics=1 dà il calendario delle uscite (per Google Calendar); senza parametri rimanda all'app.
  *  - doPost: l'API usata dall'app (PWA su GitHub Pages). Risponde in JSON.
  * Le notifiche stanno in Notify.gs (regole) e Push.gs (firma e invio).
  */
@@ -13,20 +13,16 @@ const RANGES = {
 };
 const CHECK_TAB = 'Storico Check';
 
-function doGet() {
-  const t = HtmlService.createTemplateFromFile('Index');
-  let snap = null;
-  try {
-    const keys = Object.keys(RANGES), vals = batchGet_(keys.map(k => RANGES[k]));
-    snap = {};
-    keys.forEach((k, i) => { snap[k] = vals[i]; });
-  } catch (e) { snap = null; }
-  t.snap = JSON.stringify(snap).replace(/</g, '\\u003c');
-  t.snapOk = snap ? 'true' : 'false';
-  t.time = String(Date.now());
-  return t.evaluate()
-    .setTitle('Bassment Hub')
-    .addMetaTag('viewport', 'width=device-width, initial-scale=1, viewport-fit=cover');
+const APP_URL = 'https://anteeero.github.io/bassment-hub/';
+const DOC_IG = '1St8Lkr_pSVFMOOJXnHIjsk4Lk2PTgoGPvrh3Li-YdtE';
+const DOC_TT = '1GZ7WB7AgjGsqw-pOJoVQfhdS2HAa8iWEzxYoIkNR0dM';
+
+function doGet(e) {
+  if (e && e.parameter && e.parameter.ics) {
+    return ContentService.createTextOutput(icsFeed_()).setMimeType(ContentService.MimeType.ICAL);
+  }
+  return HtmlService.createHtmlOutput('<meta name="viewport" content="width=device-width,initial-scale=1"><p style="font:16px system-ui;padding:24px">Bassment Hub ora è un\'app: <a href="' + APP_URL + '" target="_top">apri Bassment Hub</a>.</p>')
+    .setTitle('Bassment Hub');
 }
 
 /* ---- API per l'app ---- */
@@ -41,6 +37,10 @@ function doPost(e) {
       case 'checkList': out = JSON.parse(checkList()); break;
       case 'checkSet': checkSet(String(a[0]), JSON.stringify(a[1] || {})); out = 'ok'; break;
       case 'checkDel': checkDel(String(a[0])); out = 'ok'; break;
+      case 'hubSet': out = hubSet_(a[0]); break;
+      case 'captions': out = captions_(); break;
+      case 'notifCfg': out = notifCfg_(); break;
+      case 'notifCfgSet': out = notifCfgSet_(a[0]); break;
       case 'pushKey': out = vapidPublicKey(); break;
       case 'pushSub': out = pushSub(String(a[0]), a[1], a[2], a[3]); break;
       case 'pushUnsub': out = pushUnsub(String(a[0])); break;
@@ -76,7 +76,86 @@ function read_(ss, a1) {
   let n = out.length; while (n && !out[n - 1].length) n--;
   return out.slice(0, n);
 }
-function batchGet_(ranges) { const ss = ss_(); return ranges.map(r => read_(ss, r)); }
+function batchGet_(ranges) {
+  // Veloce: una sola chiamata al servizio avanzato Google Sheets (se attivo nel progetto).
+  if (typeof Sheets !== 'undefined' && ranges.length) {
+    try {
+      const res = Sheets.Spreadsheets.Values.batchGet(SHEET_ID, { ranges: ranges, valueRenderOption: 'FORMATTED_VALUE', majorDimension: 'ROWS' });
+      return (res.valueRanges || []).map(v => {
+        const out = (v.values || []).map(r => { let n = r.length; while (n && r[n - 1] === '') n--; return r.slice(0, n); });
+        let n = out.length; while (n && !out[n - 1].length) n--;
+        return out.slice(0, n);
+      });
+    } catch (e) { /* ripiega sul metodo classico */ }
+  }
+  const ss = ss_(); return ranges.map(r => read_(ss, r));
+}
+/* Scrive una cella solo se nella colonna chiave della stessa riga c'è ancora quello che l'app si aspetta. */
+function hubSet_(x) {
+  const ss = ss_(), k = parseA1_(ss, x.keyRange), c = parseA1_(ss, x.range);
+  const cur = k.sh.getRange(k.r0, k.c0).getDisplayValue();
+  if (nrmKey_(cur) !== nrmKey_(x.expect)) return { moved: true, cur: cur };
+  let v = x.value;
+  if (v === true || v === false) c.sh.getRange(c.r0, c.c0).setValue(v);
+  else c.sh.getRange(c.r0, c.c0).setValue(v === null || v === undefined ? '' : v);
+  SpreadsheetApp.flush();
+  return { ok: true };
+}
+function nrmKey_(s) { return String(s == null ? '' : s).normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase().replace(/[’']/g, "'").trim(); }
+
+/* ---- didascalie dai due documenti (Instagram e TikTok) ---- */
+function captions_() {
+  const cache = CacheService.getScriptCache(), hit = cache.get('captions:v1');
+  if (hit) return JSON.parse(hit);
+  const out = { ig: parseCaptions_(DOC_IG), tt: parseCaptions_(DOC_TT), t: Date.now() };
+  const txt = JSON.stringify(out);
+  if (txt.length < 95000) cache.put('captions:v1', txt, 600);
+  return out;
+}
+function parseCaptions_(id) {
+  const body = DocumentApp.openById(id).getBody(), out = {};
+  let cur = null;
+  for (let i = 0; i < body.getNumChildren(); i++) {
+    const el = body.getChild(i), type = el.getType();
+    if (type !== DocumentApp.ElementType.PARAGRAPH && type !== DocumentApp.ElementType.LIST_ITEM) continue;
+    const p = type === DocumentApp.ElementType.PARAGRAPH ? el.asParagraph() : el.asListItem();
+    const text = p.getText().trim();
+    if (p.getHeading() === DocumentApp.ParagraphHeading.HEADING2) {
+      const m = text.split(' · ');
+      cur = (m.length > 1 && !/^prima di/i.test(text)) ? { title: m[0].trim(), artist: m.slice(1).join(' · ').trim(), lines: [], note: '' } : null;
+      if (cur) out[nrmKey_(cur.title)] = cur;
+      continue;
+    }
+    if (!cur || !text) continue;
+    if (/^(Pubblicazione|TikTok):/.test(text)) continue;
+    const t = p.editAsText();
+    if (t.isItalic(0) && t.isItalic(text.length - 1)) { cur.note = (cur.note ? cur.note + ' ' : '') + text; continue; }
+    cur.lines.push(text);
+  }
+  Object.keys(out).forEach(k => { out[k].text = out[k].lines.join('\n\n'); delete out[k].lines; });
+  return out;
+}
+
+/* ---- calendario iCal: uscite, post foto, Reddit, video Suono, promemoria ---- */
+function icsFeed_() {
+  const ss = ss_(), ev = [];
+  const esc = s => String(s || '').replace(/\\/g, '\\\\').replace(/;/g, '\\;').replace(/,/g, '\\,').replace(/\n/g, '\\n');
+  const day = s => { const m = /(\d{1,2})\/(\d{1,2})\/(\d{4})/.exec(String(s || '')); return m ? m[3] + ('0' + m[2]).slice(-2) + ('0' + m[1]).slice(-2) : null; };
+  const add = (d, title, desc, uid) => { if (d) ev.push(['BEGIN:VEVENT', 'UID:' + uid + '@bassment-hub', 'DTSTAMP:' + Utilities.formatDate(new Date(), 'UTC', "yyyyMMdd'T'HHmmss'Z'"), 'DTSTART;VALUE=DATE:' + d, 'SUMMARY:' + esc(title), 'DESCRIPTION:' + esc(desc), 'URL:' + APP_URL, 'END:VEVENT'].join('\r\n')); };
+  const col = (h, name) => { const n = nrmKey_(name), hh = (h || []).map(nrmKey_); let i = hh.indexOf(n); if (i < 0) i = hh.findIndex(c => c.startsWith(n)); return i; };
+  const data = batchGet_([RANGES.s1, RANGES.s2, RANGES.s3, RANGES.foto, RANGES.rd, RANGES.su, "'Promemoria'!A1:E200"]);
+  data.slice(0, 3).forEach((rows, si) => {
+    const h = rows[0], cd = col(h, 'Data di pubblicazione'), cv = col(h, 'Video'), ca = col(h, 'Artista'), cb = col(h, 'Basso'), cs = col(h, 'Stato');
+    rows.slice(1).forEach((r, i) => { const d = day(r[cd]); if (d && r[cv]) add(d, '🎸 ' + r[cv] + ' · ' + (r[ca] || ''), 'Instagram · basso ' + (r[cb] || '-') + ' · ' + (r[cs] || ''), 's' + (si + 1) + '-' + (i + 2) + '-' + d); });
+  });
+  [[data[3], 'Data', 'Tipo', '📷 Post foto: ', 'foto'], [data[4], 'Data', 'Community', '💬 Reddit: ', 'rd'], [data[5], 'Data', 'Idea', '🔊 Video Suono: ', 'su']].forEach(([rows, dn, tn, pre, k]) => {
+    const h = rows[0] || [], cd = col(h, dn), ct = col(h, tn), cst = col(h, 'Stato');
+    rows.slice(1).forEach((r, i) => { const d = day(r[cd]); if (d && r[ct]) add(d, pre + r[ct], r[cst] || '', k + '-' + (i + 2) + '-' + d); });
+  });
+  (data[6] || []).slice(1).forEach((r, i) => { const d = day(r[0]); if (d && r[2]) add(d, '🔔 ' + r[2], r[1] ? 'Ore ' + r[1] : '', 'pm-' + (i + 2) + '-' + d); });
+  return ['BEGIN:VCALENDAR', 'VERSION:2.0', 'PRODID:-//Bassment Hub//IT', 'CALSCALE:GREGORIAN', 'METHOD:PUBLISH', 'X-WR-CALNAME:Bassment Hub', 'X-PUBLISHED-TTL:PT6H', 'REFRESH-INTERVAL;VALUE=DURATION:PT6H'].concat(ev).concat(['END:VCALENDAR']).join('\r\n');
+}
+
 function hubGet(ranges) { return JSON.stringify(batchGet_(ranges)); }
 function sheetById_(ss, id) {
   const sh = ss.getSheets().filter(s => s.getSheetId() === Number(id))[0];
