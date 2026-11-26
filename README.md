@@ -9,4 +9,9 @@ App (PWA) per il registro di [@andreadeblasiobass](https://instagram.com/andread
 
 ## Aggiornare
 - Modifiche all'interfaccia: basta un commit su `main`. Il telefono le prende alla prossima apertura.
-- Modifiche a `apps-script/Code.gs`: vanno incollate nell'editor di Apps Script e serve una **nuova versione** della distribuzione "API app".
+- Modifiche al motore (`apps-script/`): vanno incollate nell'editor di Apps Script e serve una **nuova versione** della distribuzione "API app (PWA)". Nell'editor, `Code.gs` corrisponde a "Codice.gs"; `Push.gs` + `Notify.gs` stanno insieme nel file "Senza titolo.gs".
+
+## Notifiche
+- Web Push firmato in Apps Script (`Push.gs`, curva P-256 in JS puro: le chiavi nascono e restano nelle Proprietà dello script).
+- `Notify.gs` controlla il foglio ogni ora (attivatore creato da `attivaNotifiche`): riepilogo del mattino alle 8 nel fuso del telefono, numeri della settimana la domenica alle 20, e la scheda **Promemoria** per avvisi liberi.
+- Ogni notifica finisce anche nella scheda **Notifiche** del foglio.
