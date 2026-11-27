@@ -393,6 +393,25 @@ details.x[open] > .more { animation: vtin .18s ease-out; }
 .capbtns { display: flex; gap: 8px; flex-wrap: wrap; }
 .capbtns .btn { display: inline-flex; align-items: center; gap: 7px; }
 .capbtns svg { width: 16px; height: 16px; }
+/* condivisioni */
+.stats3 { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; }
+.stats3 .kpi { display: grid; gap: 2px; min-width: 0; }
+.stats3 .kpi b { font: 700 24px var(--f-display); }
+.stats3 .kpi small { font-size: 12px; }
+@media (max-width: 520px) { .stats3 .kpi b { font-size: 20px; } .stats3 { gap: 6px; } .stats3 .kpi { padding: 10px; } }
+.cond { padding: 16px; display: grid; gap: 12px; }
+.condh { display: flex; justify-content: space-between; align-items: flex-start; gap: 10px; }
+.condh h3 { margin: 2px 0; font: 700 19px var(--f-display); }
+.chip.acc { border-color: var(--accent); color: var(--accent); }
+.chip.ok { border-color: var(--ok); color: var(--ok); }
+.csts { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; }
+.cst { background: var(--sunk); border-radius: 10px; padding: 10px; display: grid; gap: 2px; min-width: 0; }
+.cst b { font: 700 20px var(--f-display); }
+.cst small { font-size: 11.5px; color: var(--muted); }
+.cst.warn b { color: var(--warn); font-size: 15px; }
+.cst.bad b { color: var(--bad); }
+.cst.ok b { color: var(--ok); }
+.condlink { font-size: 13px; font-weight: 600; color: var(--accent); text-decoration: none; }
 /* impostazioni */
 .setgrid { display: grid; gap: 14px; }
 .setrow { display: flex; align-items: center; justify-content: space-between; gap: 12px; flex-wrap: wrap; }
@@ -792,7 +811,7 @@ const CHECK_URL = "https://claude.ai/artifact/XEamjoCsrZsxhKhWYqUcdW";
 const RANGES = {
   s1: "'1° Stagione'!A1:Q130", s2: "'2° Stagione'!A1:Q130", s3: "'3° Stagione'!A1:Q130",
   rep: "'Repertorio'!A1:R1043", arch: "'Archivio scartati'!A1:S400", ord: "'Ordine di registrazione'!A1:S75", obi: "'Obiettivi'!A1:H60",
-  rete: "'Rete'!A1:I60", stat: "'Statistiche'!A1:S300", promo: "'Promozioni'!A1:M100", acc: "'Account da studiare'!A1:J40", dis: "'Dischi da scremare'!A1:G308", foto: "'Post foto'!A1:G80", rd: "'Reddit'!A1:K120", su: "'Suono'!A1:R80", rk: "'Reddit karma'!A1:G300", leg: "'Legenda'!A1:A60"
+  rete: "'Rete'!A1:I60", cond: "'Condivisioni'!A1:L200", stat: "'Statistiche'!A1:S300", promo: "'Promozioni'!A1:M100", acc: "'Account da studiare'!A1:J40", dis: "'Dischi da scremare'!A1:G308", foto: "'Post foto'!A1:G80", rd: "'Reddit'!A1:K120", su: "'Suono'!A1:R80", rk: "'Reddit karma'!A1:G300", leg: "'Legenda'!A1:A60"
 };
 const SNAP_TIME = 0;
 const SNAP_OK = false;
@@ -915,6 +934,13 @@ function parseRete(rows) {
   rows.slice(1).forEach(r => { const a = g(r, 0); if (a.startsWith("@")) items.push({ acc: a, link: g(r, c.link), chi: g(r, c.chi), zona: g(r, c.zona), fol: g(r, c.fol), stato: g(r, c.stato), ultimo: g(r, c.ultimo), next: g(r, c.next), note: g(r, c.note) }); else if (a) notes.push(a); });
   return { items, notes };
 }
+function parseCond(rows) {
+  rows = rows || [];
+  const c = cols(rows[0], { data: "Data", acc: "Account", fol: "Follower", tipo: "Tipo", video: "Video", plat: "Piattaforma", views: "Visualizzazioni", like: "Like", eff: "Effetto", follow: "Follow ad Andrea", agg: "Aggiornato", note: "Andamento" });
+  const n = v => { const x = String(v || "").replace(/\./g, "").replace(",", "."); return x.trim() && !isNaN(+x) ? +x : null; };
+  return rows.slice(1).map((r, i) => ({ row: i + 2, date: pdate(g(r, c.data)), acc: g(r, c.acc), fol: n(g(r, c.fol)), tipo: g(r, c.tipo), video: g(r, c.video), plat: g(r, c.plat), views: n(g(r, c.views)), like: n(g(r, c.like)), eff: g(r, c.eff), follow: n(g(r, c.follow)), agg: g(r, c.agg), note: g(r, c.note) }))
+    .filter(x => x.acc && x.video).sort((a, b) => (b.date || 0) - (a.date || 0));
+}
 function parseAcc(rows) {
   rows = rows || [];
   const c = cols(rows[0], { acc: "Account", link: "Link", gruppo: "Gruppo", genere: "Genere", fol: "Follower", med: "Mediana", rap: "Rapporto", note: "Note" });
@@ -995,7 +1021,7 @@ function parseAll(raw) {
   const seasons = [parseSeason(raw.s1, 1), parseSeason(raw.s2, 2), parseSeason(raw.s3, 3)];
   const all = seasons.flatMap(s => s.videos).sort((a, b) => a.date - b.date);
   const byTitle = new Map(); all.forEach(v => byTitle.set(norm(v.video), v));
-  return { seasons, all, byTitle, rep: parseRep(raw.rep), arch: parseRep(raw.arch), ord: parseOrd(raw.ord), obi: parseObi(raw.obi), rete: parseRete(raw.rete), acc: parseAcc(raw.acc), dis: parseDis(raw.dis), stat: parseStat(raw.stat), foto: parseFoto(raw.foto), rd: parseReddit(raw.rd), su: parseSuono(raw.su), rk: parseKarma(raw.rk), promo: parsePromo(raw.promo), leg: (raw.leg || []).map(r => g(r, 0)).filter(Boolean) };
+  return { seasons, all, byTitle, rep: parseRep(raw.rep), arch: parseRep(raw.arch), ord: parseOrd(raw.ord), obi: parseObi(raw.obi), rete: parseRete(raw.rete), cond: parseCond(raw.cond), acc: parseAcc(raw.acc), dis: parseDis(raw.dis), stat: parseStat(raw.stat), foto: parseFoto(raw.foto), rd: parseReddit(raw.rd), su: parseSuono(raw.su), rk: parseKarma(raw.rk), promo: parsePromo(raw.promo), leg: (raw.leg || []).map(r => g(r, 0)).filter(Boolean) };
 }
 
 /* ================= stato della pagina ================= */
@@ -1610,7 +1636,7 @@ const afterSet = () => {
   const sl = $("#setlink"); if (sl) sl.onclick = () => window.hubSetup();
   const cr = $("#capreload"); if (cr) cr.onclick = () => { toast("Ricarico le didascalie…"); loadCaptions(true); };
 };
-const VIEWS = { impostazioni: vSet, oggi: vOggi, calendario: vCal, foto: vFoto, reddit: vReddit, suono: vSuono, registra: vReg, repertorio: vRep, dischi: vDis, numeri: vNum, check: vCheck, rete: vRete, account: vAcc, legenda: vLeg };
+const VIEWS = { impostazioni: vSet, oggi: vOggi, calendario: vCal, foto: vFoto, reddit: vReddit, suono: vSuono, registra: vReg, repertorio: vRep, dischi: vDis, numeri: vNum, check: vCheck, rete: vRete, condivisioni: vCond, account: vAcc, legenda: vLeg };
 const ALIAS = { altro: "dischi" };
 const IC = {
   oggi: '<circle cx="12" cy="12" r="9"/><circle cx="12" cy="12" r="2.5"/>',
@@ -1627,6 +1653,7 @@ const IC = {
   account: '<circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5M8.5 11h5M11 8.5v5"/>',
   legenda: '<path d="M5 4h11l3 3v13H5z"/><path d="M9 10h6M9 14h6"/>',
   foglio: '<rect x="4" y="3" width="16" height="18" rx="2"/><path d="M4 9h16M4 15h16M10 3v18"/>',
+  condivisioni: '<circle cx="18" cy="5" r="2.6"/><circle cx="6" cy="12" r="2.6"/><circle cx="18" cy="19" r="2.6"/><path d="M8.3 13.3l7.4 4.4M15.7 6.3l-7.4 4.4"/>',
   impostazioni: '<circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.7 1.7 0 0 0 .3 1.8l.1.1a2 2 0 1 1-2.8 2.8l-.1-.1a1.7 1.7 0 0 0-1.8-.3 1.7 1.7 0 0 0-1 1.5V21a2 2 0 1 1-4 0v-.1a1.7 1.7 0 0 0-1.1-1.5 1.7 1.7 0 0 0-1.8.3l-.1.1a2 2 0 1 1-2.8-2.8l.1-.1a1.7 1.7 0 0 0 .3-1.8 1.7 1.7 0 0 0-1.5-1H3a2 2 0 1 1 0-4h.1a1.7 1.7 0 0 0 1.5-1.1 1.7 1.7 0 0 0-.3-1.8l-.1-.1a2 2 0 1 1 2.8-2.8l.1.1a1.7 1.7 0 0 0 1.8.3H9a1.7 1.7 0 0 0 1-1.5V3a2 2 0 1 1 4 0v.1a1.7 1.7 0 0 0 1 1.5 1.7 1.7 0 0 0 1.8-.3l.1-.1a2 2 0 1 1 2.8 2.8l-.1.1a1.7 1.7 0 0 0-.3 1.8V9a1.7 1.7 0 0 0 1.5 1H21a2 2 0 1 1 0 4h-.1a1.7 1.7 0 0 0-1.5 1z"/>',
   altro: '<circle cx="5" cy="12" r="1.6"/><circle cx="12" cy="12" r="1.6"/><circle cx="19" cy="12" r="1.6"/>',
   copia: '<rect x="8" y="8" width="12" height="12" rx="2"/><path d="M16 8V6a2 2 0 0 0-2-2H6a2 2 0 0 0-2 2v8a2 2 0 0 0 2 2h2"/>'
@@ -1635,7 +1662,7 @@ const MENU = [
   ["Pubblicazione", [["oggi", "Oggi"], ["calendario", "Calendario"], ["foto", "Post foto"], ["reddit", "Reddit"], ["suono", "Video Suono"], ["registra", "Ordine di registrazione"]]],
   ["Brani", [["repertorio", "Repertorio"], ["dischi", "Dischi da scremare"]]],
   ["Analisi", [["numeri", "Numeri"], ["check", "Check del mix"]]],
-  ["Persone", [["rete", "Rete · produttori"], ["account", "Account da studiare"]]],
+  ["Persone", [["rete", "Rete · produttori"], ["condivisioni", "Condivisioni"], ["account", "Account da studiare"]]],
   ["Riferimenti", [["legenda", "Legenda"]]],
   ["App", [["impostazioni", "Impostazioni"]]]
 ];
@@ -1647,6 +1674,7 @@ function menuCount(k) {
   if (k === "dischi") return DATA.dis.filter(d => !d.asc).length || "";
   if (k === "registra") return DATA.ord.items.filter(x => !(x.audio && x.video)).length || "";
   if (k === "rete") return DATA.rete.items.length;
+  if (k === "condivisioni") return DATA.cond.length || "";
   if (k === "account") return DATA.acc.items.length;
   return "";
 }
@@ -2074,7 +2102,39 @@ document.addEventListener("change", e => {
   Object.entries(keep).forEach(([k, val]) => { const x = $("#disform").querySelector(`[data-da="${k}"]`); if (x && k !== "pista") x.value = val; });
 });
 function personList(items, kind) {
-  return `<div class="card list">${items.map(p => `<div class="person"><div class="t"><a href="${esc(p.link)}" target="_blank" rel="noopener">${esc(p.acc)}</a><span class="sub" style="font-size:13px">${(kind === "rete" ? [p.zona, p.fol ? fmtNum(+p.fol || 0) + " follower" : ""] : [p.gruppo, p.fol ? fmtNum(+p.fol || 0) + " follower" : "follower da inserire", p.med ? "mediana " + p.med : ""]).filter(Boolean).map(esc).join(" · ")}</span>${p.stato ? `<span class="chip">${esc(p.stato)}</span>` : ""}</div>${p.chi ? `<div style="font-size:14px">${esc(p.chi)}</div>` : ""}${p.next ? `<div style="font-size:14px"><b>Prossimo passo:</b> ${esc(p.next)}</div>` : ""}${p.note ? `<div class="sub" style="font-size:13px">${esc(p.note)}</div>` : ""}</div>`).join("")}</div>`;
+  return `<div class="card list">${items.map(p => `<div class="person"><div class="t"><a href="${esc(p.link)}" target="_blank" rel="noopener">${esc(p.acc)}</a><span class="sub" style="font-size:13px">${(kind === "rete" ? [p.zona, p.fol ? fmtNum(+p.fol || 0) + " follower" : ""] : [p.gruppo, p.fol ? fmtNum(+p.fol || 0) + " follower" : "follower da inserire", p.med ? "mediana " + p.med : ""]).filter(Boolean).map(esc).join(" · ")}</span>${p.stato ? `<span class="chip">${esc(p.stato)}</span>` : ""}</div>${p.chi ? `<div style="font-size:14px">${esc(p.chi)}</div>` : ""}${p.next ? `<div style="font-size:14px"><b>Prossimo passo:</b> ${esc(p.next)}</div>` : ""}${p.note ? `<div class="sub" style="font-size:13px">${esc(p.note)}</div>` : ""}${kind === "rete" ? condLink(p.acc) : ""}</div>`).join("")}</div>`;
+}
+/* ================= Condivisioni ================= */
+const COND_GID = 1132464701;
+const shortK = v => v == null ? "—" : v >= 1e6 ? nf1(v / 1e6) + " mln" : v >= 1e4 ? nf1(v / 1e3) + "K" : fmtNum(v);
+const tipoShort = t => { const x = norm(t); return x.startsWith("collab") ? "Collab" : x.startsWith("repost") ? "Repost" : x.startsWith("storia") ? "Storia" : (t.split(" (")[0] || t); };
+function condCard(x) {
+  const t = tipoShort(x.tipo), extra = x.tipo.includes("(") ? x.tipo.slice(x.tipo.indexOf("(") + 1).replace(/\)$/, "") : "";
+  const ratio = x.views != null && x.fol ? `${nf1(x.views / x.fol * 100)}% dei loro follower` : "";
+  const stat = (l, v, sub, cls) => `<div class="cst ${cls || ""}"><span class="label">${l}</span><b>${v}</b>${sub ? `<small>${esc(sub)}</small>` : ""}</div>`;
+  return `<article class="card cond">
+    <div class="condh"><div><span class="label">${x.date ? fmtShort(x.date) + " " + x.date.getFullYear() : ""} · ${esc(x.plat || "")}</span><h3>${esc(x.video)}</h3>
+      <div class="sub">${esc(x.acc)}${x.fol ? " · " + shortK(x.fol) + " follower" : ""}</div></div>
+      <span class="chip ${t === "Collab" ? "ok" : t === "Repost" ? "acc" : ""}" title="${esc(x.tipo)}">${esc(t)}</span></div>
+    <div class="csts">${stat("Viste", shortK(x.views), ratio || (x.views == null ? "solo sul tuo profilo" : ""))}${stat("Like", shortK(x.like))}${stat("Follow a te", x.follow == null ? "da misurare" : fmtNum(x.follow), "", x.follow == null ? "warn" : x.follow <= 2 ? "bad" : "ok")}</div>
+    ${extra ? `<p class="sub" style="margin:0;font-size:13px">${esc(extra)}</p>` : ""}
+    ${x.eff ? `<div><span class="label">Effetto sul tuo profilo</span><p style="margin:2px 0 0">${esc(x.eff)}</p></div>` : ""}
+    ${x.note ? `<details class="x"><summary>Andamento e note${x.agg ? " · aggiornato " + esc(x.agg) : ""}</summary><div class="more"><p style="margin:0;white-space:pre-line">${esc(x.note.replace(/\. (Circa|Mattina|Like|Mediana|Lo stesso|Se fosse)/g, ".\n$1"))}</p></div></details>` : (x.agg ? `<span class="sub" style="font-size:12px">Aggiornato ${esc(x.agg)}</span>` : "")}
+  </article>`;
+}
+function vCond() {
+  const L = DATA.cond;
+  const views = L.reduce((a, x) => a + (x.views || 0), 0), fol = L.filter(x => x.follow != null), toMeasure = L.length - fol.length;
+  const byAcc = {}; L.forEach(x => { byAcc[x.acc] = (byAcc[x.acc] || 0) + 1; });
+  let h = `<section class="sec"><h1>Condivisioni</h1><p class="sub" style="margin-top:-6px">Ogni volta che un altro account condivide un tuo video: quanto ha girato da lui e quanto ti è servito davvero.</p>
+    <div class="stats3">${[["Condivisioni", fmtNum(L.length), Object.keys(byAcc).length + (Object.keys(byAcc).length === 1 ? " account" : " account")], ["Viste da loro", shortK(views), "sui loro profili"], ["Follow a te", fol.length ? fmtNum(fol.reduce((a, x) => a + x.follow, 0)) : "—", toMeasure ? toMeasure + " da misurare" : "tutte misurate"]].map(([l, v, s]) => `<div class="card pad kpi"><span class="label">${l}</span><b>${v}</b><small class="sub">${s}</small></div>`).join("")}</div>
+    ${L.length ? L.map(condCard).join("") : `<div class="card pad sub">Nessuna condivisione registrata.</div>`}
+    <p class="sub" style="font-size:13px">I numeri si aggiornano nella scheda <a href="${SHEET_URL}#gid=${COND_GID}" target="_blank" rel="noopener">Condivisioni</a> del foglio (o mandali a Claude).</p></section>`;
+  return h;
+}
+function condLink(acc) {
+  const n = (DATA.cond || []).filter(x => norm(x.acc) === norm(acc)).length;
+  return n ? `<a class="condlink" href="#condivisioni">${n === 1 ? "1 condivisione" : n + " condivisioni"} →</a>` : "";
 }
 function vRete() { const r = DATA.rete; return `<section class="sec"><h1>Rete · produttori</h1>${personList(r.items, "rete")}${r.notes.length ? `<div class="notes">${r.notes.map(n => `<p>${esc(n)}</p>`).join("")}</div>` : ""}</section>`; }
 function vAcc() { const r = DATA.acc; return `<section class="sec"><h1>Account da studiare</h1>${personList(r.items, "acc")}${r.notes.length ? `<div class="notes">${r.notes.map(n => `<p>${esc(n)}</p>`).join("")}</div>` : ""}</section>`; }

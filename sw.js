@@ -2,7 +2,7 @@
    La pagina arriva dalla rete se risponde entro 2,5 s (così gli aggiornamenti arrivano subito),
    altrimenti dalla copia salvata: l'app si apre anche offline.
    Notifiche: il server manda una "spinta" vuota; qui si chiede all'API cosa c'è di nuovo e lo si mostra. */
-const VERSION = "hub-v4";
+const VERSION = "hub-v5";
 const KEEP = ["hub-config"];
 const SHELL = ["./", "./index.html", "./manifest.webmanifest", "./icons/icon-192.png", "./icons/icon-512.png", "./icons/badge-96.png", "./icons/logo-mask.png"];
 
